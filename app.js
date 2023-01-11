@@ -29,7 +29,7 @@ app.get('/page/:pageId', (request, response) => {
                 `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
                 `<a href="/create">Create</a>
                 <a href="/update/${sanitizedTitle}">Update</a>
-                <form action="delete_process" method="post">
+                <form action="/delete" method="post">
                     <input type="hidden" name="id" value="${sanitizedTitle}" />
                     <input type="submit" value="Delete" />
                 </form>`
@@ -86,8 +86,7 @@ app.get('/update/:updateId', (request, response) => {
                 </form>`, 
                 `<a href="/create">Create</a> <a href="/update/${title}">Update</a>`
             );
-            response.writeHead(200);
-            response.end(HTML);
+            response.send(HTML);
         });
     });
 });
@@ -107,6 +106,21 @@ app.post('/update', (request, response) => {
             response.writeHead(302, {location: `/?id=${title}`});
             response.end("Success");
             });
+        });
+    });
+});
+
+app.post('/delete', (request, response) => {
+    var body = '';
+    request.on('data', function(data) {
+        body = body + data;
+    });
+    request.on('end', function() {
+        var post = qs.parse(body);
+        var id = post.id;
+        fs.unlink(`data/${id}`, function(error) {
+            response.writeHead(302, {location: `/`});
+            response.end("Success");
         });
     });
 });
