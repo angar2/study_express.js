@@ -65,8 +65,7 @@ app.post('/create', (request, response) => {
         var title = post.title;
         var description = post.description;
         fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-            response.writeHead(302, {location: `/?id=${title}`});
-            response.end("Success");
+            response.redirect(`/page/${title}`);
         });
     });
 })
@@ -103,8 +102,7 @@ app.post('/update', (request, response) => {
         var description = post.description;
         fs.rename(`data/${id}`, `data/${title}`, function(error) {
             fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-            response.writeHead(302, {location: `/?id=${title}`});
-            response.end("Success");
+            response.redirect(`/page/${title}`);
             });
         });
     });
@@ -119,8 +117,7 @@ app.post('/delete', (request, response) => {
         var post = qs.parse(body);
         var id = post.id;
         fs.unlink(`data/${id}`, function(error) {
-            response.writeHead(302, {location: `/`});
-            response.end("Success");
+            response.redirect('/');
         });
     });
 });
