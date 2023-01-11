@@ -28,7 +28,7 @@ app.get('/page/:pageId', (request, response) => {
             var HTML = template.HTML(sanitizedTitle, list,
                 `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
                 `<a href="/create">Create</a>
-                <a href="/update?id=${sanitizedTitle}">Update</a>
+                <a href="/update/${sanitizedTitle}">Update</a>
                 <form action="delete_process" method="post">
                     <input type="hidden" name="id" value="${sanitizedTitle}" />
                     <input type="submit" value="Delete" />
@@ -57,10 +57,10 @@ app.get('/create', (request, response) => {
 
 app.post('/create', (request, response) => {
     var body = '';
-      request.on('data', function(data) {
+    request.on('data', function(data) {
         body = body + data;
-      });
-      request.on('end', function() {
+    });
+    request.on('end', function() {
         var post = qs.parse(body);
         var title = post.title;
         var description = post.description;
@@ -68,8 +68,48 @@ app.post('/create', (request, response) => {
             response.writeHead(302, {location: `/?id=${title}`});
             response.end("Success");
         });
-      });
+    });
 })
+
+app.get('/update/:updateId', (request, response) => {
+    fs.readdir(`./data`, function(error, filelist) {
+        var filteredId = path.parse(request.params.updateId).base;
+        fs.readFile(`data/${filteredId}`, 'utf8', function(err, desc){
+            var title = request.params.updateId;
+            var list = template.list(filelist);
+            var HTML = template.HTML(title, list,
+                `<form action="/update" method="post">
+                    <input type="hidden" name="id" value="${title}" />
+                    <p><input type="text" name="title" placeholder="title" value="${title}"/></p>
+                    <p><textarea type=text name="description" placeholder="description">${desc}</textarea></p>
+                    <p><input type="submit" /></p>
+                </form>`, 
+                `<a href="/create">Create</a> <a href="/update/${title}">Update</a>`
+            );
+            response.writeHead(200);
+            response.end(HTML);
+        });
+    });
+});
+
+app.post('/update', (request, response) => {
+    var body = '';
+    request.on('data', function(data) {
+        body = body + data;
+    });
+    request.on('end', function() {
+        var post = qs.parse(body);
+        var id = post.id;
+        var title = post.title;
+        var description = post.description;
+        fs.rename(`data/${id}`, `data/${title}`, function(error) {
+            fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
+            response.writeHead(302, {location: `/?id=${title}`});
+            response.end("Success");
+            });
+        });
+    });
+});
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
