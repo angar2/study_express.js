@@ -5,7 +5,12 @@ const fs = require('fs');
 const qs = require('querystring');
 const path = require('path');
 const sanitizeHTML = require('sanitize-html');
+const bodyParser = require('body-parser');
+const compression = require('compression');
 const template = require('./lib/template.js');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 app.get('/', (request, response) => {
     fs.readdir(`./data`, function(error, filelist) {
@@ -56,19 +61,13 @@ app.get('/create', (request, response) => {
 });
 
 app.post('/create', (request, response) => {
-    var body = '';
-    request.on('data', function(data) {
-        body = body + data;
+    var post = request.body;
+    var title = post.title;
+    var description = post.description;
+    fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
+        response.redirect(`/page/${title}`);
     });
-    request.on('end', function() {
-        var post = qs.parse(body);
-        var title = post.title;
-        var description = post.description;
-        fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-            response.redirect(`/page/${title}`);
-        });
-    });
-})
+});
 
 app.get('/update/:updateId', (request, response) => {
     fs.readdir(`./data`, function(error, filelist) {
@@ -91,34 +90,22 @@ app.get('/update/:updateId', (request, response) => {
 });
 
 app.post('/update', (request, response) => {
-    var body = '';
-    request.on('data', function(data) {
-        body = body + data;
-    });
-    request.on('end', function() {
-        var post = qs.parse(body);
-        var id = post.id;
-        var title = post.title;
-        var description = post.description;
-        fs.rename(`data/${id}`, `data/${title}`, function(error) {
-            fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-            response.redirect(`/page/${title}`);
-            });
+    var post = request.body;
+    var id = post.id;
+    var title = post.title;
+    var description = post.description;
+    fs.rename(`data/${id}`, `data/${title}`, function(error) {
+        fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
+        response.redirect(`/page/${title}`);
         });
     });
 });
 
 app.post('/delete', (request, response) => {
-    var body = '';
-    request.on('data', function(data) {
-        body = body + data;
-    });
-    request.on('end', function() {
-        var post = qs.parse(body);
-        var id = post.id;
-        fs.unlink(`data/${id}`, function(error) {
-            response.redirect('/');
-        });
+    var post = request.body;
+    var id = post.id;
+    fs.unlink(`data/${id}`, function(error) {
+        response.redirect('/');
     });
 });
 
