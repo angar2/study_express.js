@@ -32,23 +32,27 @@ app.get('/', (request, response) => {
     response.send(HTML);
 });
 
-app.get('/page/:pageId', (request, response) => {
+app.get('/page/:pageId', (request, response, next) => {
     var filteredId = path.parse(request.params.pageId).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function(error, description){
-        var title = request.params.pageId;
-        var sanitizedTitle = sanitizeHTML(title);
-        var sanitizedDescription = sanitizeHTML(description);
-        var list = template.list(request.filelist);
-        var HTML = template.HTML(sanitizedTitle, list,
-            `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
-            `<a href="/create">Create</a>
-            <a href="/update/${sanitizedTitle}">Update</a>
-            <form action="/delete" method="post">
-                <input type="hidden" name="id" value="${sanitizedTitle}" />
-                <input type="submit" value="Delete" />
-            </form>`
-        );
-        response.send(HTML);
+        if(error){
+            next(error);
+        } else {
+            var title = request.params.pageId;
+            var sanitizedTitle = sanitizeHTML(title);
+            var sanitizedDescription = sanitizeHTML(description);
+            var list = template.list(request.filelist);
+            var HTML = template.HTML(sanitizedTitle, list,
+                `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
+                `<a href="/create">Create</a>
+                <a href="/update/${sanitizedTitle}">Update</a>
+                <form action="/delete" method="post">
+                    <input type="hidden" name="id" value="${sanitizedTitle}" />
+                    <input type="submit" value="Delete" />
+                </form>`
+            );
+            response.send(HTML);
+        }
     });
 });
 
@@ -111,6 +115,15 @@ app.post('/delete', (request, response) => {
     fs.unlink(`data/${id}`, function(error) {
         response.redirect('/');
     });
+});
+
+app.use((request, response, next) => {
+    response.status(404).send('요청하신 페이지를 찾을 수 없습니다 임마');
+});
+
+app.use((error, request, response, next) => {
+    console.error(error.stack);
+    response.status(500).send('잘못 입력하셨잖아')
 });
 
 app.listen(port, () => {
