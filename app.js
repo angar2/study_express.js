@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 const template = require('./lib/template.js');
 
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 app.get('*',(request, response, next) => {
@@ -22,7 +23,12 @@ app.get('/', (request, response) => {
     var title = 'Welcome';
     var description = 'Hello Express';
     var list = template.list(request.filelist);
-    var HTML = template.HTML(title, list, `<h2>${title}</h2><p>${description}</p>`, `<a href="/create">Create</a>`);
+    var HTML = template.HTML(title, list, 
+        `<h2>${title}</h2>
+        <p>${description}</p>
+        <img src="/images/hello.jpg" style="width:200px">`, 
+        `<a href="/create">Create</a>`
+    );
     response.send(HTML);
 });
 
