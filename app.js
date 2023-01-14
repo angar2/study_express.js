@@ -4,7 +4,7 @@ const port = 3000;
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const template = require('./lib/template.js');
+const indexRouter = require('./routes/index.js');
 const topicRouter = require('./routes/topic.js');
 
 app.use(express.static('public'));
@@ -16,20 +16,8 @@ app.get('*',(request, response, next) => {
         next();
     });
 });
+app.use('/',indexRouter);
 app.use('/topic', topicRouter);
-
-app.get('/', (request, response) => {
-    var title = 'Welcome';
-    var description = 'Hello Express';
-    var list = template.list(request.filelist);
-    var HTML = template.HTML(title, list, 
-        `<h2>${title}</h2>
-        <p>${description}</p>
-        <img src="/images/hello.jpg" style="width:200px">`, 
-        `<a href="/create">Create</a>`
-    );
-    response.send(HTML);
-});
 
 app.use((request, response, next) => {
     response.status(404).send('요청하신 페이지를 찾을 수 없습니다 임마');
