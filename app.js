@@ -4,18 +4,23 @@ const port = 3000;
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const compression = require('compression');
+const helmet = require('helmet');
+
 const indexRouter = require('./routes/index.js');
 const topicRouter = require('./routes/topic.js');
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
+app.use(helmet());
+
 app.get('*',(request, response, next) => {
     fs.readdir(`./data`, function(error, filelist) {
         request.filelist = filelist;
         next();
     });
 });
+
 app.use('/',indexRouter);
 app.use('/topic', topicRouter);
 
