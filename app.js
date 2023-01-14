@@ -32,35 +32,11 @@ app.get('/', (request, response) => {
     response.send(HTML);
 });
 
-app.get('/page/:pageId', (request, response, next) => {
-    var filteredId = path.parse(request.params.pageId).base;
-    fs.readFile(`data/${filteredId}`, 'utf8', function(error, description){
-        if(error){
-            next(error);
-        } else {
-            var title = request.params.pageId;
-            var sanitizedTitle = sanitizeHTML(title);
-            var sanitizedDescription = sanitizeHTML(description);
-            var list = template.list(request.filelist);
-            var HTML = template.HTML(sanitizedTitle, list,
-                `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
-                `<a href="/create">Create</a>
-                <a href="/update/${sanitizedTitle}">Update</a>
-                <form action="/delete" method="post">
-                    <input type="hidden" name="id" value="${sanitizedTitle}" />
-                    <input type="submit" value="Delete" />
-                </form>`
-            );
-            response.send(HTML);
-        }
-    });
-});
-
-app.get('/create', (request, response) => {
+app.get('/topic/create', (request, response) => {
     var title = 'Create';
     var list = template.list(request.filelist);
     var HTML = template.HTML(title, list,
-        `<form action="/create" method="post">
+        `<form action="/topic/create" method="post">
             <p><input type="text" name="title" placeholder="title" /></p>
             <p><textarea type=text name="description" placeholder="description"></textarea></p>
             <p><input type="submit" /></p>
@@ -70,50 +46,74 @@ app.get('/create', (request, response) => {
     response.send(HTML);
 });
 
-app.post('/create', (request, response) => {
+app.post('/topic/create', (request, response) => {
     var post = request.body;
     var title = post.title;
     var description = post.description;
     fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-        response.redirect(`/page/${title}`);
+        response.redirect(`/topic/${title}`);
     });
 });
 
-app.get('/update/:updateId', (request, response) => {
+app.get('/topic/update/:updateId', (request, response) => {
     var filteredId = path.parse(request.params.updateId).base;
     fs.readFile(`data/${filteredId}`, 'utf8', function(err, desc){
         var title = request.params.updateId;
         var list = template.list(request.filelist);
         var HTML = template.HTML(title, list,
-            `<form action="/update" method="post">
+            `<form action="/topic/update" method="post">
                 <input type="hidden" name="id" value="${title}" />
                 <p><input type="text" name="title" placeholder="title" value="${title}"/></p>
                 <p><textarea type=text name="description" placeholder="description">${desc}</textarea></p>
                 <p><input type="submit" /></p>
             </form>`, 
-            `<a href="/create">Create</a> <a href="/update/${title}">Update</a>`
+            `<a href="/topic/create">Create</a> <a href="/topic/update/${title}">Update</a>`
         );
         response.send(HTML);
     });
 });
 
-app.post('/update', (request, response) => {
+app.post('/topic/update', (request, response) => {
     var post = request.body;
     var id = post.id;
     var title = post.title;
     var description = post.description;
     fs.rename(`data/${id}`, `data/${title}`, function(error) {
         fs.writeFile(`data/${title}`, description, 'utf8', function(error) {
-        response.redirect(`/page/${title}`);
+        response.redirect(`/topic/${title}`);
         });
     });
 });
 
-app.post('/delete', (request, response) => {
+app.post('/topic/delete', (request, response) => {
     var post = request.body;
     var id = post.id;
     fs.unlink(`data/${id}`, function(error) {
         response.redirect('/');
+    });
+});
+
+app.get('/topic/:topicId', (request, response, next) => {
+    var filteredId = path.parse(request.params.topicId).base;
+    fs.readFile(`data/${filteredId}`, 'utf8', function(error, description){
+        if(error){
+            next(error);
+        } else {
+            var title = request.params.topicId;
+            var sanitizedTitle = sanitizeHTML(title);
+            var sanitizedDescription = sanitizeHTML(description);
+            var list = template.list(request.filelist);
+            var HTML = template.HTML(sanitizedTitle, list,
+                `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`,
+                `<a href="/topic/create">Create</a>
+                <a href="/topic/update/${sanitizedTitle}">Update</a>
+                <form action="/topic/delete" method="post">
+                    <input type="hidden" name="id" value="${sanitizedTitle}" />
+                    <input type="submit" value="Delete" />
+                </form>`
+            );
+            response.send(HTML);
+        }
     });
 });
 
